@@ -4,9 +4,11 @@ import { useQuery } from '@tanstack/react-query'
 import { listTransactionsBetween } from '../api/transactions'
 import { listBudgetsForMonth } from '../api/budgets'
 import { listContributions, listDependencies, listGoals } from '../api/goals'
-import { useCategories } from '../hooks/queries'
+import { getTimeSettings, listAllTasks, listProjects } from '../api/time'
+import { useCategories, useHouseholdId } from '../hooks/queries'
 import { runInsights, pillarStatus } from '../insights/engine'
 import { monthTotals } from '../insights/helpers'
+import { lifeLoad, LOAD_DISPLAY } from '../time/engine'
 import type { Insight } from '../insights/types'
 import { formatZAR, formatZARWhole } from '../lib/money'
 import { addMonths, monthLabel, monthStartOf, todayISO } from '../lib/dates'
@@ -29,6 +31,14 @@ export default function Dashboard() {
     queryFn: listContributions,
   })
   const { data: deps } = useQuery({ queryKey: ['goals', 'deps'], queryFn: listDependencies })
+  const { data: householdId } = useHouseholdId()
+  const { data: projects } = useQuery({ queryKey: ['projects'], queryFn: listProjects })
+  const { data: allTasks } = useQuery({ queryKey: ['tasks', 'all'], queryFn: listAllTasks })
+  const { data: timeSettings } = useQuery({
+    queryKey: ['time-settings', householdId],
+    queryFn: () => getTimeSettings(householdId!),
+    enabled: Boolean(householdId),
+  })
 
   const loaded = categories && transactions && budgets && goals && contributions
 
@@ -104,6 +114,22 @@ export default function Dashboard() {
       <div className="rounded-2xl bg-ink-soft p-4 space-y-1.5">
         <StatusRow name="Financial" status={financial} />
         <StatusRow name="Goals" status={goalsStatus} />
+        {timeSettings && projects && allTasks && (
+          <StatusRow
+            name="Time"
+            status={
+              LOAD_DISPLAY[
+                lifeLoad(
+                  projects,
+                  allTasks,
+                  todayISO(),
+                  timeSettings.weekly_flexible_hours,
+                  timeSettings.utilization_pct
+                ).load
+              ]
+            }
+          />
+        )}
         {(['Physical', 'Mental', 'Relationship', 'Career'] as const).map((p) => (
           <div key={p} className="flex justify-between text-sm">
             <span>{p}</span>

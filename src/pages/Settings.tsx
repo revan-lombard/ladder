@@ -1,5 +1,7 @@
 import { useState } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../hooks/useAuth'
+import { getTimeSettings, saveTimeSettings } from '../api/time'
 import {
   useAccounts,
   useCategories,
@@ -27,11 +29,79 @@ export default function Settings() {
 
       <AccountsSection />
       <CategoriesSection />
+      <CapacitySection />
 
       <button onClick={signOut} className="w-full rounded-xl bg-white/10 py-3 font-bold">
         Sign out
       </button>
     </div>
+  )
+}
+
+function CapacitySection() {
+  const qc = useQueryClient()
+  const { data: householdId } = useHouseholdId()
+  const { data: settings } = useQuery({
+    queryKey: ['time-settings', householdId],
+    queryFn: () => getTimeSettings(householdId!),
+    enabled: Boolean(householdId),
+  })
+  const save = useMutation({
+    mutationFn: saveTimeSettings,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['time-settings'] }),
+  })
+  const [hours, setHours] = useState<string | null>(null)
+  const [util, setUtil] = useState<number | null>(null)
+
+  if (!settings || !householdId) return null
+  const shownHours = hours ?? String(settings.weekly_flexible_hours)
+  const shownUtil = util ?? settings.utilization_pct
+
+  const commit = () => {
+    const h = Number(shownHours.replace(',', '.'))
+    if (!Number.isFinite(h) || h < 0) return
+    save.mutate({
+      household_id: householdId,
+      weekly_flexible_hours: h,
+      utilization_pct: shownUtil,
+    })
+  }
+
+  return (
+    <section className="space-y-2">
+      <h2 className="text-xs uppercase tracking-widest text-white/50">Time capacity</h2>
+      <div className="rounded-2xl bg-ink-soft p-4 space-y-3">
+        <label className="block text-sm">
+          Flexible hours per week (after work, sleep, family, gym…)
+          <input
+            inputMode="decimal"
+            value={shownHours}
+            onChange={(e) => setHours(e.target.value)}
+            onBlur={commit}
+            className="mt-1 w-full rounded-xl bg-white/10 px-3 py-2.5 outline-none"
+          />
+        </label>
+        <label className="block text-sm">
+          Planned utilisation: <b>{shownUtil}%</b>{' '}
+          <span className="text-white/40">({100 - shownUtil}% buffer for life happening)</span>
+          <input
+            type="range"
+            min={10}
+            max={100}
+            step={5}
+            value={shownUtil}
+            onChange={(e) => setUtil(Number(e.target.value))}
+            onMouseUp={commit}
+            onTouchEnd={commit}
+            className="mt-2 w-full accent-[#34d399]"
+          />
+        </label>
+        <p className="text-xs text-white/40">
+          Project deadlines and life load are measured against this realistic
+          pool — never against every technically-free hour.
+        </p>
+      </div>
+    </section>
   )
 }
 

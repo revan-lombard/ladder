@@ -114,11 +114,11 @@ check('Insert with forged household_id is rejected', Boolean(forged), forged?.me
 let anonLeaks = 0
 for (const table of ['profiles', 'households', 'household_members', 'accounts',
   'categories', 'transactions', 'budgets', 'goals', 'goal_contributions',
-  'goal_dependencies', 'meetings', 'tasks']) {
+  'goal_dependencies', 'meetings', 'tasks', 'projects', 'events', 'time_settings']) {
   const { data } = await anon.from(table).select('*').limit(1)
   if ((data?.length ?? 0) > 0) anonLeaks++
 }
-check('Anonymous client gets 0 rows on all 12 tables', anonLeaks === 0, `${anonLeaks} leaks`)
+check('Anonymous client gets 0 rows on all 15 tables', anonLeaks === 0, `${anonLeaks} leaks`)
 
 // Profiles: A can see B's profile (same household), and vice versa.
 const { data: profsA } = await clientA.from('profiles').select('id')

@@ -23,6 +23,16 @@ export function addMonths(monthISO: string, n: number): string {
   return `${y}-${String(m + 1).padStart(2, '0')}-01`
 }
 
+/** '2026-08-31' + 3 -> '2026-09-03'; string in, string out (UTC-safe). */
+export function addDays(dateISO: string, n: number): string {
+  const utc = Date.UTC(
+    Number(dateISO.slice(0, 4)),
+    Number(dateISO.slice(5, 7)) - 1,
+    Number(dateISO.slice(8, 10)) + n
+  )
+  return new Date(utc).toISOString().slice(0, 10)
+}
+
 /** '2026-08-01' -> 'August 2026' */
 export function monthLabel(monthISO: string): string {
   const y = Number(monthISO.slice(0, 4))

@@ -108,6 +108,8 @@ export interface Agenda {
   sections: { title: string; lines: string[] }[]
 }
 
+export type TaskStatus = 'open' | 'in_progress' | 'blocked' | 'done' | 'cancelled'
+
 export interface Task {
   id: string
   household_id: string
@@ -115,11 +117,69 @@ export interface Task {
   visibility: Visibility
   meeting_id: string | null
   title: string
+  description: string | null
   priority: number
   due_date: string | null
-  status: 'open' | 'done'
+  status: TaskStatus
+  estimated_minutes: number | null
+  actual_minutes: number | null
+  project_id: string | null
+  goal_id: string | null
+  energy: 'low' | 'medium' | 'high' | null
   completed_at: string | null
   created_at: string
+}
+
+export type ProjectStatus = 'active' | 'complete' | 'archived'
+
+export interface Project {
+  id: string
+  household_id: string
+  owner_id: string
+  visibility: Visibility
+  name: string
+  deadline: string | null
+  estimated_minutes: number
+  priority: number
+  goal_id: string | null
+  notes: string | null
+  status: ProjectStatus
+  created_at: string
+}
+
+export type EventCategory =
+  | 'work'
+  | 'personal'
+  | 'relationship'
+  | 'family'
+  | 'health'
+  | 'career'
+  | 'business'
+  | 'travel'
+  | 'protected'
+
+export interface CalendarEvent {
+  id: string
+  household_id: string
+  owner_id: string
+  visibility: Visibility
+  title: string
+  category: EventCategory
+  event_date: string
+  start_time: string | null
+  end_time: string | null
+  all_day: boolean
+  location: string | null
+  project_id: string | null
+  goal_id: string | null
+  notes: string | null
+  created_at: string
+}
+
+export interface TimeSettings {
+  household_id: string
+  weekly_flexible_hours: number
+  utilization_pct: number
 }
 
 export interface TransactionInput {
