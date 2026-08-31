@@ -95,6 +95,7 @@ export default function TodayView() {
         </div>
       )}
 
+      <div className="lg:grid lg:grid-cols-2 lg:gap-4 lg:items-start space-y-4 lg:space-y-0">
       <section className="space-y-2">
         <div className="flex items-center justify-between">
           <h2 className="text-xs uppercase tracking-widest text-white/50">Today · {dayLabel(today)}</h2>
@@ -167,6 +168,7 @@ export default function TodayView() {
           )}
         </div>
       </section>
+      </div>
 
       {adding && householdId && (
         <AddEventSheet householdId={householdId} onClose={() => setAdding(false)} />
@@ -226,9 +228,9 @@ function AddEventSheet({ householdId, onClose }: { householdId: string; onClose:
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 sm:p-6" onClick={onClose}>
       <div
-        className="w-full max-w-lg rounded-t-3xl bg-ink-soft p-4 pb-8 space-y-3"
+        className="w-full max-w-lg rounded-t-3xl sm:rounded-3xl bg-ink-soft p-4 pb-8 space-y-3"
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="font-bold text-lg">New event</h2>

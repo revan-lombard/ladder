@@ -64,9 +64,9 @@ export default function Goals() {
   }
 
   return (
-    <div className="max-w-lg mx-auto p-4 space-y-3">
+    <div className="max-w-lg lg:max-w-2xl mx-auto p-4 lg:p-8 space-y-3">
       <header className="flex items-center justify-between pt-2">
-        <h1 className="text-xl font-bold">🪜 The Ladder</h1>
+        <h1 className="text-xl lg:text-2xl font-bold">🪜 The Ladder</h1>
         <button
           onClick={() => setAdding(true)}
           className="rounded-lg bg-white/10 px-3 py-2 text-sm font-bold"
@@ -360,9 +360,9 @@ function Modal({
   onClose: () => void
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 sm:p-6" onClick={onClose}>
       <div
-        className="w-full max-w-lg rounded-t-3xl bg-ink-soft p-4 pb-8 space-y-3 max-h-[85vh] overflow-y-auto"
+        className="w-full max-w-lg rounded-t-3xl sm:rounded-3xl bg-ink-soft p-4 pb-8 space-y-3 max-h-[85vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="font-bold text-lg">{title}</h2>

@@ -27,8 +27,8 @@ export default function Settings() {
   const { session, signOut } = useAuth()
 
   return (
-    <div className="max-w-lg mx-auto p-4 space-y-6">
-      <h1 className="text-xl font-bold pt-2">Settings</h1>
+    <div className="max-w-lg lg:max-w-3xl mx-auto p-4 lg:p-8 space-y-6">
+      <h1 className="text-xl lg:text-2xl font-bold pt-2">Settings</h1>
 
       <section className="rounded-2xl bg-ink-soft p-4 space-y-1">
         <p className="text-white/40 text-xs uppercase tracking-widest">Signed in as</p>

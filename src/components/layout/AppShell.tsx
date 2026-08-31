@@ -1,13 +1,18 @@
 import type { ReactNode } from 'react'
 import BottomNav from './BottomNav'
+import Sidebar from './Sidebar'
 import { QuickAddProvider } from '../QuickAddSheet'
 
-/** Authed chrome: content area + QuickAdd FAB + bottom tab bar. */
+/**
+ * Authed chrome. Phones: content + QuickAdd FAB + bottom tab bar.
+ * Desktop (lg+): fixed sidebar, wider content, no bottom bar.
+ */
 export default function AppShell({ children }: { children: ReactNode }) {
   return (
     <QuickAddProvider>
-      <div className="min-h-full flex flex-col">
-        <main className="flex-1 pb-24">{children}</main>
+      <div className="min-h-full">
+        <Sidebar />
+        <main className="pb-24 lg:pb-10 lg:pl-60">{children}</main>
         <BottomNav />
       </div>
     </QuickAddProvider>

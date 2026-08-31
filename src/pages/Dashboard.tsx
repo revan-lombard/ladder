@@ -85,18 +85,18 @@ export default function Dashboard() {
     .slice(0, 3)
 
   return (
-    <div className="max-w-lg mx-auto p-4 space-y-4">
+    <div className="max-w-lg lg:max-w-5xl mx-auto p-4 lg:p-8 space-y-4">
       <header className="flex items-center justify-between pt-2">
         <div>
-          <h1 className="text-xl font-bold">How are we doing?</h1>
+          <h1 className="text-xl lg:text-2xl font-bold">How are we doing?</h1>
           <p className="text-white/40 text-sm">{monthLabel(month)}</p>
         </div>
-        <Link to="/settings" className="text-2xl" aria-label="Settings">
+        <Link to="/settings" className="text-2xl lg:hidden" aria-label="Settings">
           ⚙️
         </Link>
       </header>
 
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 lg:gap-4">
         <Tile label="Income" value={formatZARWhole(totals.income)} />
         <Tile label="Expenses" value={formatZARWhole(totals.expenses)} />
         <Tile
@@ -111,7 +111,8 @@ export default function Dashboard() {
         />
       </div>
 
-      <div className="rounded-2xl bg-ink-soft p-4 space-y-1.5">
+      <div className="lg:grid lg:grid-cols-2 lg:gap-4 space-y-4 lg:space-y-0">
+      <div className="rounded-2xl bg-ink-soft p-4 space-y-1.5 h-fit">
         <StatusRow name="Financial" status={financial} />
         <StatusRow name="Goals" status={goalsStatus} />
         {timeSettings && projects && allTasks && (
@@ -139,7 +140,7 @@ export default function Dashboard() {
       </div>
 
       {nextRungs.length > 0 && (
-        <Link to="/goals" className="block rounded-2xl bg-ink-soft p-4 space-y-3">
+        <Link to="/goals" className="block rounded-2xl bg-ink-soft p-4 space-y-3 h-fit">
           <p className="text-xs uppercase tracking-widest text-white/40">🪜 Next rungs</p>
           {nextRungs.map((g) => {
             const contributed = contributedByGoal.get(g.id) ?? 0
@@ -159,7 +160,9 @@ export default function Dashboard() {
         </Link>
       )}
 
-      <section className="space-y-2">
+      </div>
+
+      <section className="space-y-2 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-4 lg:items-start">
         {insights.map((insight) => (
           <InsightCard key={insight.id} insight={insight} />
         ))}

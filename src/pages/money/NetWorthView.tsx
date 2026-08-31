@@ -81,6 +81,7 @@ export default function NetWorthView() {
 
   return (
     <div className="space-y-4">
+      <div className="lg:grid lg:grid-cols-2 lg:gap-4 lg:items-start space-y-4 lg:space-y-0">
       <div className="rounded-2xl bg-ink-soft p-4 text-center space-y-1">
         <p className="text-xs uppercase tracking-widest text-white/40">Net worth</p>
         <p className={`text-3xl font-extrabold tabular-nums ${nw.netCents < 0 ? 'text-alert' : ''}`}>
@@ -144,7 +145,9 @@ export default function NetWorthView() {
           </p>
         </div>
       )}
+      </div>
 
+      <div className="lg:grid lg:grid-cols-2 lg:gap-4 lg:items-start space-y-4 lg:space-y-0">
       <ItemsSection
         title="Assets"
         items={(assets ?? []).filter((a) => !a.archived)}
@@ -169,6 +172,7 @@ export default function NetWorthView() {
         onArchive={(id) => archiveLiability(id).then(invalidate)}
         valueKey="balance_cents"
       />
+      </div>
 
       <AchievementsSection
         contributions={contributions ?? []}

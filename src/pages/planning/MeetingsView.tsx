@@ -212,9 +212,9 @@ function MeetingSheet({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 sm:p-6" onClick={onClose}>
       <div
-        className="w-full max-w-lg rounded-t-3xl bg-ink-soft p-4 pb-8 space-y-4 max-h-[90vh] overflow-y-auto"
+        className="w-full max-w-lg rounded-t-3xl sm:rounded-3xl bg-ink-soft p-4 pb-8 space-y-4 max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="font-bold text-lg">

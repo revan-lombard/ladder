@@ -63,9 +63,9 @@ export default function Budget() {
   }, [categories, budgetByCategory, actualByCategory])
 
   return (
-    <div className="max-w-lg mx-auto p-4 space-y-4">
+    <div className="max-w-lg lg:max-w-5xl mx-auto p-4 lg:p-8 space-y-4">
       <header className="flex items-center justify-between pt-2">
-        <h1 className="text-xl font-bold">Budget</h1>
+        <h1 className="text-xl lg:text-2xl font-bold">Budget</h1>
         <MonthPicker month={month} onChange={setMonth} />
       </header>
 
@@ -88,24 +88,26 @@ export default function Budget() {
         )}
       </div>
 
-      {parents.map((parent) => (
-        <ParentGroup
-          key={parent.id}
-          parent={parent}
-          categories={childrenOf(parent.id)}
-          budgetByCategory={budgetByCategory}
-          actualByCategory={actualByCategory}
-          onSetBudget={(categoryId, cents) =>
-            householdId &&
-            saveBudget.mutate({
-              household_id: householdId,
-              category_id: categoryId,
-              month,
-              amount_cents: cents,
-            })
-          }
-        />
-      ))}
+      <div className="space-y-4 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-4 lg:items-start">
+        {parents.map((parent) => (
+          <ParentGroup
+            key={parent.id}
+            parent={parent}
+            categories={childrenOf(parent.id)}
+            budgetByCategory={budgetByCategory}
+            actualByCategory={actualByCategory}
+            onSetBudget={(categoryId, cents) =>
+              householdId &&
+              saveBudget.mutate({
+                household_id: householdId,
+                category_id: categoryId,
+                month,
+                amount_cents: cents,
+              })
+            }
+          />
+        ))}
+      </div>
     </div>
   )
 }

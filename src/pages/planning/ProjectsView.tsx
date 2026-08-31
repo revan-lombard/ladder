@@ -80,6 +80,7 @@ export default function ProjectsView() {
         </div>
       )}
 
+      <div className="space-y-3 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-4 lg:items-start">
       {active.map((p) => {
         const risk = riskById.get(p.id)
         return (
@@ -111,6 +112,7 @@ export default function ProjectsView() {
           </button>
         )
       })}
+      </div>
 
       {complete.length > 0 && (
         <p className="text-xs text-white/30 text-center">
@@ -322,9 +324,9 @@ function Sheet({
   onClose: () => void
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 sm:p-6" onClick={onClose}>
       <div
-        className="w-full max-w-lg rounded-t-3xl bg-ink-soft p-4 pb-8 space-y-3 max-h-[88vh] overflow-y-auto"
+        className="w-full max-w-lg rounded-t-3xl sm:rounded-3xl bg-ink-soft p-4 pb-8 space-y-3 max-h-[88vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="font-bold text-lg">{title}</h2>

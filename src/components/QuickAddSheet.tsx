@@ -73,7 +73,7 @@ export function QuickAddProvider({ children }: { children: ReactNode }) {
       <button
         onClick={openAdd}
         aria-label="Add transaction"
-        className="fixed bottom-20 right-4 z-40 h-14 w-14 rounded-full bg-rung text-ink text-3xl font-bold shadow-lg active:scale-95 transition"
+        className="fixed bottom-20 right-4 lg:bottom-8 lg:right-8 z-40 h-14 w-14 rounded-full bg-rung text-ink text-3xl font-bold shadow-lg active:scale-95 hover:scale-105 transition"
       >
         +
       </button>
@@ -167,9 +167,9 @@ function Sheet({ editing, onClose }: { editing: Transaction | null; onClose: () 
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 sm:p-6" onClick={onClose}>
       <div
-        className="w-full max-w-lg rounded-t-3xl bg-ink-soft p-4 pb-8 space-y-3 max-h-[85vh] overflow-y-auto"
+        className="w-full max-w-lg rounded-t-3xl sm:rounded-3xl bg-ink-soft p-4 pb-8 space-y-3 max-h-[85vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between">
