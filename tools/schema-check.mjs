@@ -11,7 +11,8 @@ const anon = createClient(
 
 const tables = ['profiles', 'households', 'household_members', 'accounts',
   'categories', 'transactions', 'budgets', 'goals', 'goal_contributions',
-  'goal_dependencies', 'meetings', 'tasks', 'projects', 'events', 'time_settings']
+  'goal_dependencies', 'meetings', 'tasks', 'projects', 'events', 'time_settings',
+  'assets', 'liabilities', 'net_worth_snapshots', 'decisions', 'household_values', 'life_settings']
 
 let bad = 0
 for (const t of tables) {
