@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#0f172a"/>
+  <!-- ladder rails -->
+  <rect x="176" y="96" width="28" height="320" rx="14" fill="#34d399"/>
+  <rect x="308" y="96" width="28" height="320" rx="14" fill="#34d399"/>
+  <!-- rungs -->
+  <rect x="188" y="140" width="136" height="24" rx="12" fill="#f8fafc"/>
+  <rect x="188" y="216" width="136" height="24" rx="12" fill="#f8fafc"/>
+  <rect x="188" y="292" width="136" height="24" rx="12" fill="#f8fafc"/>
+  <rect x="188" y="368" width="136" height="24" rx="12" fill="#f8fafc"/>
+</svg>

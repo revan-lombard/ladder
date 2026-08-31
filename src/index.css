@@ -1,0 +1,28 @@
+@import "tailwindcss";
+
+@theme {
+  /* Calm, clean, modern — not accounting software. */
+  --color-ink: #0f172a;        /* deep slate backdrop */
+  --color-ink-soft: #1e293b;   /* cards */
+  --color-rung: #34d399;       /* emerald — progress, positive */
+  --color-rung-dark: #059669;
+  --color-warn: #fbbf24;       /* amber — watch */
+  --color-alert: #f87171;      /* red — problem */
+  --font-sans: "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  background-color: var(--color-ink);
+  color: #f8fafc;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+
+/* iOS safe areas for the bottom nav */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
