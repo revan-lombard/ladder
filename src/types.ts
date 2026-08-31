@@ -45,6 +45,83 @@ export interface Transaction {
   created_at: string
 }
 
+export interface Budget {
+  id: string
+  household_id: string
+  owner_id: string
+  visibility: Visibility
+  category_id: string
+  month: string
+  amount_cents: number
+  created_at: string
+}
+
+export type GoalStatus = 'active' | 'complete' | 'archived'
+
+export interface Goal {
+  id: string
+  household_id: string
+  owner_id: string
+  visibility: Visibility
+  name: string
+  target_amount_cents: number
+  target_date: string | null
+  ladder_position: number
+  status: GoalStatus
+  pillar: string
+  notes: string | null
+  created_at: string
+}
+
+export interface GoalContribution {
+  id: string
+  household_id: string
+  owner_id: string
+  visibility: Visibility
+  goal_id: string
+  contrib_date: string
+  amount_cents: number
+  note: string | null
+  created_at: string
+}
+
+export interface GoalDependency {
+  goal_id: string
+  depends_on_goal_id: string
+  household_id: string
+}
+
+export interface Meeting {
+  id: string
+  household_id: string
+  owner_id: string
+  visibility: Visibility
+  kind: 'weekly' | 'monthly'
+  meeting_date: string
+  agenda: Agenda
+  notes: string | null
+  completed_at: string | null
+  created_at: string
+}
+
+export interface Agenda {
+  sections: { title: string; lines: string[] }[]
+}
+
+export interface Task {
+  id: string
+  household_id: string
+  owner_id: string
+  visibility: Visibility
+  meeting_id: string | null
+  title: string
+  priority: number
+  due_date: string | null
+  status: 'open' | 'done'
+  completed_at: string | null
+  created_at: string
+}
+
 export interface TransactionInput {
   household_id: string
   account_id: string

@@ -2,8 +2,9 @@ import { useMemo, useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { useCategories, useTransactions } from '../hooks/queries'
 import { useQuickAdd } from '../components/QuickAddSheet'
+import MonthPicker from '../components/ui/MonthPicker'
 import { formatZAR } from '../lib/money'
-import { addMonths, dayLabel, monthLabel, monthStartOf, todayISO } from '../lib/dates'
+import { dayLabel, monthLabel, monthStartOf, todayISO } from '../lib/dates'
 import type { Transaction } from '../types'
 
 export default function Money() {
@@ -40,23 +41,7 @@ export default function Money() {
     <div className="max-w-lg mx-auto p-4 space-y-4">
       <header className="flex items-center justify-between pt-2">
         <h1 className="text-xl font-bold">Money</h1>
-        <div className="flex items-center gap-1">
-          <button
-            onClick={() => setMonth(addMonths(month, -1))}
-            className="h-9 w-9 rounded-lg bg-white/10 font-bold"
-            aria-label="Previous month"
-          >
-            ‹
-          </button>
-          <span className="text-sm font-bold w-32 text-center">{monthLabel(month)}</span>
-          <button
-            onClick={() => setMonth(addMonths(month, 1))}
-            className="h-9 w-9 rounded-lg bg-white/10 font-bold"
-            aria-label="Next month"
-          >
-            ›
-          </button>
-        </div>
+        <MonthPicker month={month} onChange={setMonth} />
       </header>
 
       <div className="grid grid-cols-2 gap-2 text-center">

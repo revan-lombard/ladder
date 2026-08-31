@@ -15,6 +15,21 @@ export async function listTransactionsForMonth(monthISO: string): Promise<Transa
   return data as Transaction[]
 }
 
+/** Transactions from fromMonth (inclusive) to toMonthExclusive. */
+export async function listTransactionsBetween(
+  fromMonth: string,
+  toMonthExclusive: string
+): Promise<Transaction[]> {
+  const { data, error } = await supabase
+    .from('transactions')
+    .select('*')
+    .gte('txn_date', fromMonth)
+    .lt('txn_date', toMonthExclusive)
+    .order('txn_date', { ascending: false })
+  if (error) throw error
+  return data as Transaction[]
+}
+
 export async function createTransaction(input: TransactionInput): Promise<Transaction> {
   const { data, error } = await supabase
     .from('transactions')
