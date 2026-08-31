@@ -24,9 +24,8 @@ declare
   $j$::jsonb;
   sort_i int := 0;
 begin
-  -- ✏️ EDIT THESE TWO EMAILS:
-  select id into v_user_a from auth.users where email = 'revan@example.com';
-  select id into v_user_b from auth.users where email = 'partner@example.com';
+  select id into v_user_a from auth.users where email = 'r4v3n.lmb@gmail.com';
+  select id into v_user_b from auth.users where email = 'bronwen2504@icloud.com';
 
   if v_user_a is null or v_user_b is null then
     raise exception 'Edit the two emails in 003_seed_categories.sql to match the dashboard-created users.';
