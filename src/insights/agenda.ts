@@ -52,10 +52,26 @@ export function buildWeeklyAgenda(inputs: InsightInputs): Agenda {
   }
 }
 
-export function buildMonthlyAgenda(inputs: InsightInputs): Agenda {
+export function buildMonthlyAgenda(
+  inputs: InsightInputs,
+  extras?: { values?: string[] }
+): Agenda {
   const weekly = buildWeeklyAgenda(inputs)
   const previous = addMonths(inputs.month, -1)
   const prevTotals = monthTotals(inputs.transactions, previous)
+
+  const stateOfLife = {
+    title: '🌡️ State of our life',
+    lines: [
+      'Biggest win of the month?',
+      'Biggest problem?',
+      'Biggest risk right now?',
+      'Biggest opportunity?',
+      ...(extras?.values?.length
+        ? [`Are we living our values? (${extras.values.join(' → ')})`]
+        : []),
+    ],
+  }
 
   return {
     sections: [
@@ -63,12 +79,11 @@ export function buildMonthlyAgenda(inputs: InsightInputs): Agenda {
         title: `📊 ${monthLabel(previous)} in review`,
         lines: [
           `Income ${formatZAR(prevTotals.income)}, expenses ${formatZAR(prevTotals.expenses)}, surplus ${formatZAR(prevTotals.income - prevTotals.expenses)}`,
-          'Biggest win of the month?',
-          'Biggest concern?',
           'What should change next month?',
         ],
       },
       ...weekly.sections,
+      stateOfLife,
       {
         title: '🎯 Next month',
         lines: ['Set 3–5 priorities below before completing the review.'],

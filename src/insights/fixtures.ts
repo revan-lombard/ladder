@@ -21,6 +21,7 @@ export function cat(name: string, kind: 'expense' | 'income' = 'expense'): Categ
     kind,
     pillar: 'financial',
     sort_order: 0,
+    is_essential: false,
     archived: false,
   }
 }

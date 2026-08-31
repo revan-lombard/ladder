@@ -11,6 +11,7 @@ import {
 import { listTransactionsBetween } from '../../api/transactions'
 import { listBudgetsForMonth } from '../../api/budgets'
 import { listContributions, listGoals } from '../../api/goals'
+import { listValues } from '../../api/life'
 import { useCategories, useHouseholdId } from '../../hooks/queries'
 import { buildWeeklyAgenda, buildMonthlyAgenda } from '../../insights/agenda'
 import { addMonths, dayLabel, monthStartOf, todayISO } from '../../lib/dates'
@@ -37,6 +38,7 @@ export default function MeetingsView() {
     queryKey: ['goals', 'contributions'],
     queryFn: listContributions,
   })
+  const { data: values } = useQuery({ queryKey: ['life', 'values'], queryFn: listValues })
 
   const [open, setOpen] = useState<Meeting | null>(null)
   const dataReady = categories && transactions && budgets && goals && contributions
@@ -52,7 +54,10 @@ export default function MeetingsView() {
         goals: goals!,
         contributions: contributions!,
       }
-      const agenda = kind === 'weekly' ? buildWeeklyAgenda(inputs) : buildMonthlyAgenda(inputs)
+      const agenda =
+        kind === 'weekly'
+          ? buildWeeklyAgenda(inputs)
+          : buildMonthlyAgenda(inputs, { values: (values ?? []).map((v) => v.name) })
       return createMeeting({ household_id: householdId, kind, meeting_date: todayISO(), agenda })
     },
     onSuccess: (meeting) => {

@@ -3,6 +3,14 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../hooks/useAuth'
 import { getTimeSettings, saveTimeSettings } from '../api/time'
 import {
+  getLifeSettings,
+  listValues,
+  saveLifeSettings,
+  saveValues,
+  setCategoryEssential,
+} from '../api/life'
+import { listGoals } from '../api/goals'
+import {
   useAccounts,
   useCategories,
   useCreateAccount,
@@ -30,11 +38,122 @@ export default function Settings() {
       <AccountsSection />
       <CategoriesSection />
       <CapacitySection />
+      <ResilienceSection />
+      <ValuesSection />
 
       <button onClick={signOut} className="w-full rounded-xl bg-white/10 py-3 font-bold">
         Sign out
       </button>
     </div>
+  )
+}
+
+function ResilienceSection() {
+  const qc = useQueryClient()
+  const { data: householdId } = useHouseholdId()
+  const { data: settings } = useQuery({
+    queryKey: ['life', 'settings', householdId],
+    queryFn: () => getLifeSettings(householdId!),
+    enabled: Boolean(householdId),
+  })
+  const { data: goals } = useQuery({ queryKey: ['goals', 'list'], queryFn: listGoals })
+  const { data: categories } = useCategories()
+
+  if (!householdId || !settings) return null
+
+  const parents = (categories ?? []).filter(
+    (c) => !c.parent_id && !c.archived && c.kind === 'expense'
+  )
+
+  const pickGoal = async (goalId: string) => {
+    await saveLifeSettings({ household_id: householdId, emergency_goal_id: goalId || null })
+    qc.invalidateQueries({ queryKey: ['life'] })
+  }
+
+  const toggleEssential = async (id: string, essential: boolean) => {
+    await setCategoryEssential(id, essential)
+    qc.invalidateQueries({ queryKey: ['categories'] })
+  }
+
+  return (
+    <section className="space-y-2">
+      <h2 className="text-xs uppercase tracking-widest text-white/50">Resilience</h2>
+      <div className="rounded-2xl bg-ink-soft p-4 space-y-3">
+        <label className="block text-sm">
+          Emergency fund goal (its contributions = your cushion)
+          <select
+            value={settings.emergency_goal_id ?? ''}
+            onChange={(e) => pickGoal(e.target.value)}
+            className="mt-1 w-full rounded-xl bg-white/10 px-3 py-2.5 outline-none text-white"
+          >
+            <option value="" className="text-ink">Not set</option>
+            {(goals ?? [])
+              .filter((g) => g.status !== 'archived')
+              .map((g) => (
+                <option key={g.id} value={g.id} className="text-ink">{g.name}</option>
+              ))}
+          </select>
+        </label>
+        <div className="text-sm space-y-1.5">
+          <p>Essential spending groups (can't be cut in a crisis):</p>
+          <div className="flex flex-wrap gap-1.5">
+            {parents.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => toggleEssential(p.id, !p.is_essential)}
+                className={`rounded-full px-2.5 py-1 text-xs ${
+                  p.is_essential ? 'bg-rung text-ink font-bold' : 'bg-white/10'
+                }`}
+              >
+                {p.is_essential ? '⭐ ' : ''}{p.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function ValuesSection() {
+  const qc = useQueryClient()
+  const { data: householdId } = useHouseholdId()
+  const { data: values } = useQuery({ queryKey: ['life', 'values'], queryFn: listValues })
+  const [draft, setDraft] = useState<string | null>(null)
+
+  if (!householdId) return null
+  const shown = draft ?? (values ?? []).map((v) => v.name).join('\n')
+
+  const save = async () => {
+    if (draft === null) return
+    const names = draft.split('\n').map((s) => s.trim()).filter(Boolean).slice(0, 10)
+    await saveValues(householdId, names)
+    qc.invalidateQueries({ queryKey: ['life', 'values'] })
+    setDraft(null)
+  }
+
+  return (
+    <section className="space-y-2">
+      <h2 className="text-xs uppercase tracking-widest text-white/50">Our values</h2>
+      <div className="rounded-2xl bg-ink-soft p-4 space-y-2">
+        <p className="text-xs text-white/40">
+          Ranked, most important first — one per line (e.g. Family, Financial
+          security, Health…). Decisions and reviews check against these.
+        </p>
+        <textarea
+          rows={5}
+          value={shown}
+          onChange={(e) => setDraft(e.target.value)}
+          placeholder={'Family\nFinancial security\nHealth'}
+          className="w-full rounded-xl bg-white/10 px-3 py-2.5 outline-none text-sm"
+        />
+        {draft !== null && (
+          <button onClick={save} className="w-full rounded-xl bg-rung text-ink font-bold py-2.5">
+            Save values
+          </button>
+        )}
+      </div>
+    </section>
   )
 }
 

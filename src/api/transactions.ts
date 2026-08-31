@@ -30,6 +30,14 @@ export async function listTransactionsBetween(
   return data as Transaction[]
 }
 
+export async function countTransactions(): Promise<number> {
+  const { count, error } = await supabase
+    .from('transactions')
+    .select('*', { count: 'exact', head: true })
+  if (error) throw error
+  return count ?? 0
+}
+
 export async function createTransaction(input: TransactionInput): Promise<Transaction> {
   const { data, error } = await supabase
     .from('transactions')

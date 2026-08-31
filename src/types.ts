@@ -25,6 +25,7 @@ export interface Category {
   kind: TxnKind
   pillar: string
   sort_order: number
+  is_essential: boolean
   archived: boolean
   created_at: string
 }
@@ -180,6 +181,71 @@ export interface TimeSettings {
   household_id: string
   weekly_flexible_hours: number
   utilization_pct: number
+}
+
+export interface Asset {
+  id: string
+  household_id: string
+  owner_id: string
+  visibility: Visibility
+  name: string
+  kind: 'cash' | 'investment' | 'retirement' | 'vehicle' | 'property' | 'business' | 'other'
+  current_value_cents: number
+  notes: string | null
+  archived: boolean
+  created_at: string
+}
+
+export interface Liability {
+  id: string
+  household_id: string
+  owner_id: string
+  visibility: Visibility
+  name: string
+  kind: 'home_loan' | 'vehicle_finance' | 'credit_card' | 'personal_loan' | 'store_account' | 'other'
+  balance_cents: number
+  interest_rate_pct: number | null
+  monthly_payment_cents: number | null
+  asset_id: string | null
+  notes: string | null
+  archived: boolean
+  created_at: string
+}
+
+export interface NetWorthSnapshot {
+  id: string
+  household_id: string
+  snap_date: string
+  assets_cents: number
+  liabilities_cents: number
+}
+
+export interface Decision {
+  id: string
+  household_id: string
+  owner_id: string
+  visibility: Visibility
+  title: string
+  reason: string | null
+  alternatives: string | null
+  expected_outcome: string | null
+  decided_on: string
+  review_date: string | null
+  actual_outcome: string | null
+  status: 'active' | 'reviewed' | 'superseded'
+  created_at: string
+}
+
+export interface HouseholdValue {
+  id: string
+  household_id: string
+  name: string
+  rank: number
+}
+
+export interface LifeSettings {
+  household_id: string
+  emergency_goal_id: string | null
 }
 
 export interface TransactionInput {
