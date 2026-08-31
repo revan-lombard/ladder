@@ -9,6 +9,7 @@ import { useCategories, useHouseholdId } from '../hooks/queries'
 import { runInsights, pillarStatus } from '../insights/engine'
 import { monthTotals } from '../insights/helpers'
 import { lifeLoad, LOAD_DISPLAY } from '../time/engine'
+import SetupChecklist from '../components/SetupChecklist'
 import type { Insight } from '../insights/types'
 import { formatZAR, formatZARWhole } from '../lib/money'
 import { addMonths, monthLabel, monthStartOf, todayISO } from '../lib/dates'
@@ -95,6 +96,8 @@ export default function Dashboard() {
           ⚙️
         </Link>
       </header>
+
+      <SetupChecklist />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 lg:gap-4">
         <Tile label="Income" value={formatZARWhole(totals.income)} />

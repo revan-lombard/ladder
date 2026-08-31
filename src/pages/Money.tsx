@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import TransactionsView from './money/TransactionsView'
 import NetWorthView from './money/NetWorthView'
 
@@ -10,7 +11,10 @@ const TABS = [
 type Tab = (typeof TABS)[number]['key']
 
 export default function Money() {
-  const [tab, setTab] = useState<Tab>('transactions')
+  const [params] = useSearchParams()
+  const [tab, setTab] = useState<Tab>(
+    params.get('tab') === 'networth' ? 'networth' : 'transactions'
+  )
 
   return (
     <div className="max-w-lg lg:max-w-4xl mx-auto p-4 lg:p-8 space-y-4">

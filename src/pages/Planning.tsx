@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import TodayView from './planning/TodayView'
 import ProjectsView from './planning/ProjectsView'
 import MeetingsView from './planning/MeetingsView'
@@ -14,7 +15,11 @@ const TABS = [
 type Tab = (typeof TABS)[number]['key']
 
 export default function Planning() {
-  const [tab, setTab] = useState<Tab>('today')
+  const [params] = useSearchParams()
+  const initial = params.get('tab')
+  const [tab, setTab] = useState<Tab>(
+    TABS.some((t) => t.key === initial) ? (initial as Tab) : 'today'
+  )
 
   return (
     <div className="max-w-lg lg:max-w-4xl mx-auto p-4 lg:p-8 space-y-4">
