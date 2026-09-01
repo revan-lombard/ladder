@@ -12,6 +12,9 @@
  * verifies every access rule, and cleans up after itself.
  */
 import { createClient } from '@supabase/supabase-js'
+// Node 20 has no native WebSocket; supabase-js needs one even though we never
+// use realtime here.
+import ws from 'ws'
 
 const URL = 'https://tsqyxvckftioztlniqop.supabase.co'
 const KEY = 'sb_publishable_ZwSjRHPdkBTxADzbAZjl5Q_f3wLMydm'
@@ -32,9 +35,10 @@ const check = (name, ok, detail = '') => {
   ok ? passed++ : failed++
 }
 
-const clientA = createClient(URL, KEY, { auth: { persistSession: false } })
-const clientB = createClient(URL, KEY, { auth: { persistSession: false } })
-const anon = createClient(URL, KEY, { auth: { persistSession: false } })
+const opts = { auth: { persistSession: false }, realtime: { transport: ws } }
+const clientA = createClient(URL, KEY, opts)
+const clientB = createClient(URL, KEY, opts)
+const anon = createClient(URL, KEY, opts)
 
 const { error: errA } = await clientA.auth.signInWithPassword({ email: EMAIL_A, password: PASS_A })
 const { error: errB } = await clientB.auth.signInWithPassword({ email: EMAIL_B, password: PASS_B })

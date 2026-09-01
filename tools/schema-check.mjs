@@ -2,11 +2,14 @@
 // rows (RLS blocks anon). A missing table returns a "relation ... does not
 // exist" error instead.
 import { createClient } from '@supabase/supabase-js'
+// Node 20 has no native WebSocket; supabase-js needs one even though we never
+// use realtime here.
+import ws from 'ws'
 
 const anon = createClient(
   'https://tsqyxvckftioztlniqop.supabase.co',
   'sb_publishable_ZwSjRHPdkBTxADzbAZjl5Q_f3wLMydm',
-  { auth: { persistSession: false } }
+  { auth: { persistSession: false }, realtime: { transport: ws } }
 )
 
 const tables = ['profiles', 'households', 'household_members', 'accounts',
