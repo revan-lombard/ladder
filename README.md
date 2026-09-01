@@ -17,10 +17,20 @@ A private, intelligent personal + family life-management PWA for a two-person ho
 1. Create a free project at supabase.com (region: closest to South Africa).
 2. **Authentication → Providers → Email**: disable "Confirm email". Never enable magic links (their `#access_token` URLs collide with HashRouter — password sign-in only).
 3. **Authentication → Users → Add user** twice (auto-confirm on) — the two household members. No signup flow exists by design.
-4. **SQL Editor**: run `supabase/migrations/001_schema.sql`, then `002_rls.sql`, then `003_seed_categories.sql` (edit the user emails at the top of 003 first).
+4. **SQL Editor**: run the files in `supabase/migrations/` in numeric order (edit the user emails at the top of 003 first).
 5. **Project Settings → API**: copy the URL and anon key into `.env.local` (see `.env.example`) and into GitHub repo secrets `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY`.
 
-> Free-tier note: Supabase pauses projects after ~7 days of inactivity. Data persists — unpause from the dashboard. Weekly use keeps it warm.
+> Free-tier note: Supabase pauses projects after ~7 days of inactivity. Data persists — unpause from the dashboard. Weekly use keeps it warm. A paused project also stops the daily reminder cron.
+
+## Push notifications (once)
+
+Daily morning digest (06:30 SAST): today's events, tasks due, decisions ready for review. Each phone opts in via **Settings → Notifications** in the app — on iPhone the PWA must be installed to the home screen first (Safari → Share → Add to Home Screen, iOS 16.4+).
+
+1. `node tools/generate-vapid.mjs` → writes `.env.vapid.local` (gitignored). The public key goes in `.env.local` and the deploy workflow; the `VAPID_KEYS` value is the Edge Function secret. *(Already done for this project — keys exist; regenerating invalidates every device's subscription.)*
+2. **Edge Functions → Deploy a new function** in the dashboard (or `npx supabase functions deploy send-reminders`): name it `send-reminders`, paste `supabase/functions/send-reminders/index.ts`.
+3. **Edge Functions → send-reminders → Secrets**: add `VAPID_KEYS` with the JSON value from `.env.vapid.local`.
+4. **SQL Editor**: run `supabase/migrations/006_push.sql`, then `supabase/cron/schedule-send-reminders.sql` (paste your service role key where marked — never commit it).
+5. In the deployed app on each phone: **Settings → Notifications → Enable on this device**, then **Send test**.
 
 ## Run locally
 

@@ -11,12 +11,14 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      workbox: {
-        // Precache the app shell only. Supabase requests must NEVER be
-        // cache-served — financial data may not be stale. No runtime caching
-        // rule for *.supabase.co means workbox leaves those requests alone.
+      // Custom worker (src/sw.ts) so we can handle push events; precaching
+      // policy is unchanged — Supabase requests must NEVER be cache-served,
+      // so the worker has no runtime caching rule for *.supabase.co.
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.ts',
+      injectManifest: {
         globPatterns: ['**/*.{js,css,html,svg,png,ico}'],
-        navigateFallback: '/ladder/index.html',
       },
       manifest: {
         name: 'LADDER',

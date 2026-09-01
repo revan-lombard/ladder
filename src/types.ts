@@ -248,6 +248,17 @@ export interface LifeSettings {
   emergency_goal_id: string | null
 }
 
+export interface PushSubscriptionRow {
+  id: string
+  household_id: string
+  owner_id: string
+  endpoint: string
+  p256dh: string
+  auth: string
+  device_label: string | null
+  created_at: string
+}
+
 export interface TransactionInput {
   household_id: string
   account_id: string

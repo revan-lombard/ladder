@@ -119,11 +119,12 @@ let anonLeaks = 0
 for (const table of ['profiles', 'households', 'household_members', 'accounts',
   'categories', 'transactions', 'budgets', 'goals', 'goal_contributions',
   'goal_dependencies', 'meetings', 'tasks', 'projects', 'events', 'time_settings',
-  'assets', 'liabilities', 'net_worth_snapshots', 'decisions', 'household_values', 'life_settings']) {
+  'assets', 'liabilities', 'net_worth_snapshots', 'decisions', 'household_values', 'life_settings',
+  'push_subscriptions']) {
   const { data } = await anon.from(table).select('*').limit(1)
   if ((data?.length ?? 0) > 0) anonLeaks++
 }
-check('Anonymous client gets 0 rows on all 21 tables', anonLeaks === 0, `${anonLeaks} leaks`)
+check('Anonymous client gets 0 rows on all 22 tables', anonLeaks === 0, `${anonLeaks} leaks`)
 
 // Profiles: A can see B's profile (same household), and vice versa.
 const { data: profsA } = await clientA.from('profiles').select('id')

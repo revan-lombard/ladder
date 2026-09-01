@@ -32,6 +32,9 @@ jobs:
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          # VAPID public key — public by design, the private half lives only
+          # in the send-reminders Edge Function secrets.
+          VITE_VAPID_PUBLIC_KEY: BGG9g97SLiIB_B-kqOWFYazV5TcHfeB8XwCGeXsF9lvHhhxcol1X0FrLtFd8oeYK4HoP8_6cF-AsFhK7deO8pJY
       - uses: actions/upload-pages-artifact@v4
         with:
           path: dist

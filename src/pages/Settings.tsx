@@ -1,6 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../hooks/useAuth'
+import { getCurrentSubscription, pushSupport, subscribeToPush, unsubscribeFromPush } from '../lib/push'
+import { removePushSubscription, savePushSubscription, sendTestNotification } from '../api/push'
 import { getTimeSettings, saveTimeSettings } from '../api/time'
 import {
   getLifeSettings,
@@ -40,6 +42,7 @@ export default function Settings() {
       <CapacitySection />
       <ResilienceSection />
       <ValuesSection />
+      <NotificationsSection />
 
       <button onClick={signOut} className="w-full rounded-xl bg-white/10 py-3 font-bold">
         Sign out
@@ -110,6 +113,116 @@ function ResilienceSection() {
             ))}
           </div>
         </div>
+      </div>
+    </section>
+  )
+}
+
+function NotificationsSection() {
+  const { data: householdId } = useHouseholdId()
+  const [state, setState] = useState<'loading' | 'off' | 'on' | 'needs-install' | 'unsupported'>('loading')
+  const [busy, setBusy] = useState(false)
+  const [message, setMessage] = useState<string | null>(null)
+
+  useEffect(() => {
+    const support = pushSupport()
+    if (support !== 'ok') {
+      setState(support)
+      return
+    }
+    getCurrentSubscription()
+      .then((sub) => setState(sub ? 'on' : 'off'))
+      .catch(() => setState('off'))
+  }, [])
+
+  const run = async (fn: () => Promise<void>) => {
+    setBusy(true)
+    setMessage(null)
+    try {
+      await fn()
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : 'Something went wrong.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const enable = () =>
+    run(async () => {
+      if (!householdId) return
+      const sub = await subscribeToPush()
+      const keys = sub.toJSON().keys
+      if (!keys?.p256dh || !keys?.auth) throw new Error('Browser returned an incomplete subscription.')
+      const ua = navigator.userAgent
+      const label = /iphone|ipad|ipod/i.test(ua) ? 'iPhone/iPad' : /android/i.test(ua) ? 'Android' : 'Desktop'
+      await savePushSubscription({
+        household_id: householdId,
+        endpoint: sub.endpoint,
+        p256dh: keys.p256dh,
+        auth: keys.auth,
+        device_label: label,
+      })
+      setState('on')
+      setMessage('Daily reminders enabled on this device.')
+    })
+
+  const disable = () =>
+    run(async () => {
+      const endpoint = await unsubscribeFromPush()
+      if (endpoint) await removePushSubscription(endpoint)
+      setState('off')
+      setMessage('Reminders disabled on this device.')
+    })
+
+  const sendTest = () =>
+    run(async () => {
+      const { sent, of } = await sendTestNotification()
+      setMessage(sent > 0 ? `Test sent to ${sent} of ${of} device(s).` : 'No devices reachable — re-enable and try again.')
+    })
+
+  return (
+    <section className="space-y-2">
+      <h2 className="text-xs uppercase tracking-widest text-white/50">Notifications</h2>
+      <div className="rounded-2xl bg-ink-soft p-4 space-y-3 text-sm">
+        <p className="text-xs text-white/40">
+          A morning summary on this device: today's events, tasks due and
+          decisions ready for review. Each phone opts in separately.
+        </p>
+        {state === 'needs-install' && (
+          <p>
+            First add LADDER to your home screen (Safari → Share → <b>Add to Home
+            Screen</b>), then enable notifications from inside the installed app.
+          </p>
+        )}
+        {state === 'unsupported' && <p>This browser doesn't support push notifications.</p>}
+        {state === 'off' && (
+          <button
+            onClick={enable}
+            disabled={busy || !householdId}
+            className="w-full rounded-xl bg-rung text-ink font-bold py-2.5 disabled:opacity-50"
+          >
+            Enable on this device
+          </button>
+        )}
+        {state === 'on' && (
+          <div className="flex gap-2">
+            <button
+              onClick={sendTest}
+              disabled={busy}
+              className="flex-1 rounded-xl bg-white/10 font-bold py-2.5 disabled:opacity-50"
+            >
+              Send test
+            </button>
+            <button
+              onClick={disable}
+              disabled={busy}
+              className="flex-1 rounded-xl bg-white/10 font-bold py-2.5 disabled:opacity-50"
+            >
+              Disable
+            </button>
+          </div>
+        )}
+        {message && <p className="text-xs text-white/60">{message}</p>}
       </div>
     </section>
   )
