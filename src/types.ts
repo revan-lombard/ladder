@@ -246,6 +246,8 @@ export interface HouseholdValue {
 export interface LifeSettings {
   household_id: string
   emergency_goal_id: string | null
+  /** Committed rand/month feeding the ladder; null = derive from measured surplus. */
+  ladder_monthly_commit_cents?: number | null
 }
 
 export interface PushSubscriptionRow {

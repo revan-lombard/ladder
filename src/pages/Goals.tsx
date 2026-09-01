@@ -11,10 +11,13 @@ import {
   swapPositions,
   updateGoal,
 } from '../api/goals'
+import { getLifeSettings, saveLifeSettings } from '../api/life'
+import { listTransactionsBetween } from '../api/transactions'
+import { ladderForecast, measuredMonthlyCommit, type LadderForecast } from '../forecast/engine'
 import { useHouseholdId } from '../hooks/queries'
 import { formatZAR, formatZARWhole, parseAmountToCents } from '../lib/money'
-import { todayISO } from '../lib/dates'
-import type { Goal } from '../types'
+import { addMonths, monthLabel, monthStartOf, todayISO } from '../lib/dates'
+import type { Goal, LifeSettings } from '../types'
 
 export default function Goals() {
   const qc = useQueryClient()
@@ -28,8 +31,28 @@ export default function Goals() {
   })
   const { data: deps } = useQuery({ queryKey: ['goals', 'deps'], queryFn: listDependencies })
 
+  const month = monthStartOf(todayISO())
+  const { data: lifeSettings } = useQuery({
+    queryKey: ['life', 'settings', householdId],
+    queryFn: () => getLifeSettings(householdId!),
+    enabled: Boolean(householdId),
+  })
+  const { data: transactions } = useQuery({
+    queryKey: ['transactions', 'window', month],
+    queryFn: () => listTransactionsBetween(addMonths(month, -3), addMonths(month, 1)),
+  })
+
   const [detail, setDetail] = useState<Goal | null>(null)
   const [adding, setAdding] = useState(false)
+  const [whatIf, setWhatIf] = useState<number | null>(null)
+
+  const measured = useMemo(
+    () => measuredMonthlyCommit(transactions ?? [], month),
+    [transactions, month]
+  )
+  const committed = lifeSettings?.ladder_monthly_commit_cents ?? null
+  const baseCommit = committed ?? measured
+  const shownCommit = whatIf ?? baseCommit
 
   const contributedByGoal = useMemo(() => {
     const map = new Map<string, number>()
@@ -52,6 +75,21 @@ export default function Goals() {
   }
 
   const ladder = (goals ?? []).filter((g) => g.status !== 'archived')
+
+  const forecast = useMemo(
+    () =>
+      shownCommit != null && goals && contribs
+        ? ladderForecast({
+            month,
+            goals,
+            contributions: contribs,
+            dependencies: deps ?? [],
+            monthlyCommitCents: shownCommit,
+          })
+        : null,
+    [month, goals, contribs, deps, shownCommit]
+  )
+  const forecastByGoal = new Map((forecast?.goals ?? []).map((f) => [f.goalId, f]))
 
   const reorder = useMutation({
     mutationFn: ({ a, b }: { a: Goal; b: Goal }) => swapPositions(a, b),
@@ -80,6 +118,23 @@ export default function Goals() {
           Define the rungs of your ladder — the milestones between here and the
           life you want. Start with the foundations (emergency fund first?).
         </div>
+      )}
+
+      {ladder.some((g) => g.status === 'active') && householdId && lifeSettings && (
+        <ForecastPanel
+          householdId={householdId}
+          settings={lifeSettings}
+          measured={measured}
+          committed={committed}
+          shownCommit={shownCommit}
+          whatIf={whatIf}
+          setWhatIf={setWhatIf}
+          forecast={forecast}
+          onChanged={() => {
+            invalidate()
+            qc.invalidateQueries({ queryKey: ['life'] })
+          }}
+        />
       )}
 
       {ladder.map((goal, i) => {
@@ -127,6 +182,20 @@ export default function Goals() {
               {formatZARWhole(contributed)} of {formatZARWhole(goal.target_amount_cents)} ({pct}%)
               {goal.target_date && ` · by ${goal.target_date}`}
               {locked && ` · unlocks after "${prereqName(goal)}"`}
+              {(() => {
+                if (complete) return null
+                const f = forecastByGoal.get(goal.id)
+                if (!f || f.remainingCents === 0) return null
+                if (!f.projectedMonth)
+                  return shownCommit ? <span className="text-alert"> · out of reach</span> : null
+                const late = f.monthsLate !== null && f.monthsLate > 0
+                return (
+                  <span className={late ? 'text-warn' : 'text-rung'}>
+                    {' '}
+                    · → {monthLabel(f.projectedMonth)}
+                  </span>
+                )
+              })()}
             </p>
           </button>
         )
@@ -153,6 +222,146 @@ export default function Goals() {
         />
       )}
     </div>
+  )
+}
+
+function ForecastPanel({
+  householdId,
+  settings,
+  measured,
+  committed,
+  shownCommit,
+  whatIf,
+  setWhatIf,
+  forecast,
+  onChanged,
+}: {
+  householdId: string
+  settings: LifeSettings
+  measured: number | null
+  committed: number | null
+  shownCommit: number | null
+  whatIf: number | null
+  setWhatIf: (v: number | null) => void
+  forecast: LadderForecast | null
+  onChanged: () => void
+}) {
+  const [draft, setDraft] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  const saveCommit = async () => {
+    if (draft === null) return
+    const cents = draft.trim() === '' ? null : parseAmountToCents(draft)
+    if (draft.trim() !== '' && !cents) return setError('Enter a valid amount (or clear to use measured surplus)')
+    try {
+      await saveLifeSettings({
+        household_id: householdId,
+        emergency_goal_id: settings.emergency_goal_id,
+        ladder_monthly_commit_cents: cents,
+      })
+      setDraft(null)
+      setError(null)
+      onChanged()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Save failed')
+    }
+  }
+
+  const logSuggestion = async (goalId: string, amountCents: number) => {
+    try {
+      await addContribution({
+        household_id: householdId,
+        goal_id: goalId,
+        contrib_date: todayISO(),
+        amount_cents: amountCents,
+      })
+      onChanged()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to log contribution')
+    }
+  }
+
+  const shownDraft = draft ?? (committed !== null ? String(committed / 100) : '')
+  const sliderMax = Math.max((shownCommit ?? 0) * 2, 10000_00)
+
+  return (
+    <section className="rounded-2xl bg-ink-soft p-4 space-y-3">
+      <div className="flex items-center justify-between">
+        <p className="text-xs uppercase tracking-widest text-white/40">📈 Forecast</p>
+        {committed === null && measured !== null && (
+          <span className="text-xs text-white/30">using measured surplus</span>
+        )}
+      </div>
+
+      <label className="block text-sm">
+        Monthly ladder commitment (R)
+        <div className="mt-1 flex gap-2">
+          <input
+            inputMode="decimal"
+            placeholder={measured !== null ? `measured: ${formatZARWhole(measured)}/month` : 'e.g. 2500'}
+            value={shownDraft}
+            onChange={(e) => setDraft(e.target.value)}
+            className="flex-1 rounded-xl bg-white/10 px-3 py-2.5 outline-none"
+          />
+          {draft !== null && (
+            <button onClick={saveCommit} className="rounded-xl bg-rung text-ink font-bold px-4">
+              Save
+            </button>
+          )}
+        </div>
+      </label>
+
+      {shownCommit === null ? (
+        <p className="text-xs text-white/40">
+          Set a commitment (or log 1+ months of transactions so it can be measured) to see
+          when each rung lands.
+        </p>
+      ) : (
+        <>
+          <label className="block text-sm">
+            What if: <b>{formatZARWhole(shownCommit)}/month</b>
+            {whatIf !== null && (
+              <button onClick={() => setWhatIf(null)} className="ml-2 text-xs text-white/40 underline">
+                reset
+              </button>
+            )}
+            <input
+              type="range"
+              min={0}
+              max={sliderMax}
+              step={250_00}
+              value={shownCommit}
+              onChange={(e) => setWhatIf(Number(e.target.value))}
+              className="mt-2 w-full accent-[#34d399]"
+            />
+          </label>
+
+          {forecast && forecast.thisMonth.length > 0 && whatIf === null && (
+            <div className="space-y-1.5">
+              <p className="text-xs text-white/40">Still to contribute this month:</p>
+              {forecast.thisMonth.map((a) => (
+                <div key={a.goalId} className="flex items-center justify-between gap-2 text-sm">
+                  <span>
+                    {formatZAR(a.amountCents)} → {a.name}
+                  </span>
+                  <button
+                    onClick={() => logSuggestion(a.goalId, a.amountCents)}
+                    className="rounded-lg bg-white/10 px-3 py-1.5 text-xs font-bold"
+                  >
+                    Log it
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          {forecast && forecast.thisMonth.length === 0 && whatIf === null && (
+            <p className="text-xs text-rung">This month's commitment is fully contributed 🎉</p>
+          )}
+        </>
+      )}
+
+      {error && <p className="text-alert text-sm">{error}</p>}
+    </section>
   )
 }
 

@@ -32,6 +32,10 @@ Daily morning digest (06:30 SAST): today's events, tasks due, decisions ready fo
 4. **SQL Editor**: run `supabase/migrations/006_push.sql`, then `supabase/cron/schedule-send-reminders.sql` (paste your service role key where marked — never commit it).
 5. In the deployed app on each phone: **Settings → Notifications → Enable on this device**, then **Send test**.
 
+## Ladder forecast
+
+The Goals page projects when each rung lands from a **monthly ladder commitment** (Goals → Forecast; defaults to your measured 3-month surplus until you set one — needs `supabase/migrations/007_forecast.sql`). The forecast waterfalls the commitment down the ladder in rung order, respecting prerequisites; it deliberately models no interest or growth. It also suggests this month's exact contribution (one-tap logging), adds ETAs to meeting agendas, and feeds the `ladderEta` insight rule (late/unreachable targets, with the extra rand-per-month that closes the gap).
+
 ## Run locally
 
 ```bash

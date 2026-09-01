@@ -141,7 +141,13 @@ export async function getLifeSettings(householdId: string): Promise<LifeSettings
     .eq('household_id', householdId)
     .maybeSingle()
   if (error) throw error
-  return (data as LifeSettings | null) ?? { household_id: householdId, emergency_goal_id: null }
+  return (
+    (data as LifeSettings | null) ?? {
+      household_id: householdId,
+      emergency_goal_id: null,
+      ladder_monthly_commit_cents: null,
+    }
+  )
 }
 
 export async function saveLifeSettings(settings: LifeSettings): Promise<void> {

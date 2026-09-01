@@ -2,7 +2,7 @@
 // arrays; it returns findings. Every insight MUST carry its `why` numbers —
 // the UI renders them, so a rule cannot ship without evidence (brief §55).
 
-import type { Budget, Category, Goal, GoalContribution, Transaction } from '../types'
+import type { Budget, Category, Goal, GoalContribution, GoalDependency, Transaction } from '../types'
 
 export type Severity = 'win' | 'info' | 'watch' | 'alert'
 
@@ -32,4 +32,8 @@ export interface InsightInputs {
   budgets: Budget[]
   goals: Goal[]
   contributions: GoalContribution[]
+  /** Needed by the ladder forecast rule; omitting it just disables that rule. */
+  dependencies?: GoalDependency[]
+  /** Committed (or measured) rand/month feeding the ladder. */
+  monthlyCommitCents?: number | null
 }

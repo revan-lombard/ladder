@@ -4,8 +4,10 @@ import { useQuery } from '@tanstack/react-query'
 import { listTransactionsBetween } from '../api/transactions'
 import { listBudgetsForMonth } from '../api/budgets'
 import { listContributions, listDependencies, listGoals } from '../api/goals'
+import { getLifeSettings } from '../api/life'
 import { getTimeSettings, listAllTasks, listProjects } from '../api/time'
 import { useCategories, useHouseholdId } from '../hooks/queries'
+import { ladderForecast, measuredMonthlyCommit } from '../forecast/engine'
 import { runInsights, pillarStatus } from '../insights/engine'
 import { monthTotals } from '../insights/helpers'
 import { lifeLoad, LOAD_DISPLAY } from '../time/engine'
@@ -40,8 +42,17 @@ export default function Dashboard() {
     queryFn: () => getTimeSettings(householdId!),
     enabled: Boolean(householdId),
   })
+  const { data: lifeSettings } = useQuery({
+    queryKey: ['life', 'settings', householdId],
+    queryFn: () => getLifeSettings(householdId!),
+    enabled: Boolean(householdId),
+  })
 
   const loaded = categories && transactions && budgets && goals && contributions
+
+  const monthlyCommit =
+    lifeSettings?.ladder_monthly_commit_cents ??
+    measuredMonthlyCommit(transactions ?? [], month)
 
   const totals = useMemo(
     () => monthTotals(transactions ?? [], month),
@@ -60,13 +71,16 @@ export default function Dashboard() {
             budgets: budgets!,
             goals: goals!,
             contributions: contributions!,
+            dependencies: deps ?? [],
+            monthlyCommitCents: monthlyCommit,
           })
         : [],
-    [loaded, month, categories, transactions, budgets, goals, contributions]
+    [loaded, month, categories, transactions, budgets, goals, contributions, deps, monthlyCommit]
   )
 
-  const financial = pillarStatus(insights.filter((i) => i.rule !== 'goalOffTrack'))
-  const goalsStatus = pillarStatus(insights.filter((i) => i.rule === 'goalOffTrack'))
+  const GOAL_RULES = ['goalOffTrack', 'ladderEta']
+  const financial = pillarStatus(insights.filter((i) => !GOAL_RULES.includes(i.rule)))
+  const goalsStatus = pillarStatus(insights.filter((i) => GOAL_RULES.includes(i.rule)))
 
   const contributedByGoal = useMemo(() => {
     const map = new Map<string, number>()
@@ -84,6 +98,18 @@ export default function Dashboard() {
       return !dep || goalById.get(dep.depends_on_goal_id)?.status === 'complete'
     })
     .slice(0, 3)
+
+  const etaByGoal = useMemo(() => {
+    if (monthlyCommit == null || !goals || !contributions) return new Map<string, string | null>()
+    const forecast = ladderForecast({
+      month,
+      goals,
+      contributions,
+      dependencies: deps ?? [],
+      monthlyCommitCents: monthlyCommit,
+    })
+    return new Map(forecast.goals.map((f) => [f.goalId, f.projectedMonth]))
+  }, [month, goals, contributions, deps, monthlyCommit])
 
   return (
     <div className="max-w-lg lg:max-w-5xl mx-auto p-4 lg:p-8 space-y-4">
@@ -148,11 +174,15 @@ export default function Dashboard() {
           {nextRungs.map((g) => {
             const contributed = contributedByGoal.get(g.id) ?? 0
             const pct = Math.min(Math.round((contributed / g.target_amount_cents) * 100), 100)
+            const eta = etaByGoal.get(g.id)
             return (
               <div key={g.id} className="space-y-1">
                 <div className="flex justify-between text-sm">
                   <span>{g.name}</span>
-                  <span className="text-white/40">{pct}%</span>
+                  <span className="text-white/40">
+                    {eta ? `${monthLabel(eta)} · ` : ''}
+                    {pct}%
+                  </span>
                 </div>
                 <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
                   <div className="h-full rounded-full bg-rung" style={{ width: `${pct}%` }} />

@@ -5,6 +5,7 @@
 import { formatZAR } from '../lib/money'
 import { addMonths, monthLabel } from '../lib/dates'
 import { expensesByCategory, monthTotals } from './helpers'
+import { ladderForecast } from '../forecast/engine'
 import { runInsights } from './engine'
 import type { InsightInputs } from './types'
 import type { Agenda } from '../types'
@@ -26,6 +27,17 @@ export function buildWeeklyAgenda(inputs: InsightInputs): Agenda {
   }
   if (money.length === 1) money.push('No categories over budget — anything unexpected coming?')
 
+  const forecast =
+    inputs.monthlyCommitCents != null
+      ? ladderForecast({
+          month: inputs.month,
+          goals: inputs.goals,
+          contributions: inputs.contributions,
+          dependencies: inputs.dependencies ?? [],
+          monthlyCommitCents: inputs.monthlyCommitCents,
+        })
+      : null
+
   const goalLines = inputs.goals
     .filter((g) => g.status === 'active')
     .map((g) => {
@@ -33,8 +45,18 @@ export function buildWeeklyAgenda(inputs: InsightInputs): Agenda {
         .filter((c) => c.goal_id === g.id)
         .reduce((s, c) => s + c.amount_cents, 0)
       const pct = Math.min(Math.round((contributed / g.target_amount_cents) * 100), 100)
-      return `${g.name}: ${pct}% (${formatZAR(contributed)} of ${formatZAR(g.target_amount_cents)})`
+      const projected = forecast?.goals.find((f) => f.goalId === g.id)?.projectedMonth
+      const eta = projected ? ` · ETA ${monthLabel(projected)}` : ''
+      return `${g.name}: ${pct}% (${formatZAR(contributed)} of ${formatZAR(g.target_amount_cents)})${eta}`
     })
+
+  if (forecast?.thisMonth.length) {
+    goalLines.push(
+      `This month's contribution: ${forecast.thisMonth
+        .map((a) => `${formatZAR(a.amountCents)} → ${a.name}`)
+        .join(', ')}`
+    )
+  }
 
   const wins = insights.filter((i) => i.severity === 'win').map((i) => i.title)
   const concerns = insights

@@ -10,9 +10,10 @@ import {
 } from '../../api/meetings'
 import { listTransactionsBetween } from '../../api/transactions'
 import { listBudgetsForMonth } from '../../api/budgets'
-import { listContributions, listGoals } from '../../api/goals'
-import { listValues } from '../../api/life'
+import { listContributions, listDependencies, listGoals } from '../../api/goals'
+import { getLifeSettings, listValues } from '../../api/life'
 import { useCategories, useHouseholdId } from '../../hooks/queries'
+import { measuredMonthlyCommit } from '../../forecast/engine'
 import { buildWeeklyAgenda, buildMonthlyAgenda } from '../../insights/agenda'
 import { addMonths, dayLabel, monthStartOf, todayISO } from '../../lib/dates'
 import type { Meeting } from '../../types'
@@ -39,6 +40,12 @@ export default function MeetingsView() {
     queryFn: listContributions,
   })
   const { data: values } = useQuery({ queryKey: ['life', 'values'], queryFn: listValues })
+  const { data: deps } = useQuery({ queryKey: ['goals', 'deps'], queryFn: listDependencies })
+  const { data: lifeSettings } = useQuery({
+    queryKey: ['life', 'settings', householdId],
+    queryFn: () => getLifeSettings(householdId!),
+    enabled: Boolean(householdId),
+  })
 
   const [open, setOpen] = useState<Meeting | null>(null)
   const dataReady = categories && transactions && budgets && goals && contributions
@@ -53,6 +60,10 @@ export default function MeetingsView() {
         budgets: budgets!,
         goals: goals!,
         contributions: contributions!,
+        dependencies: deps ?? [],
+        monthlyCommitCents:
+          lifeSettings?.ladder_monthly_commit_cents ??
+          measuredMonthlyCommit(transactions!, month),
       }
       const agenda =
         kind === 'weekly'

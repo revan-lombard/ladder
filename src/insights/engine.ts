@@ -2,6 +2,7 @@ import { overspend } from './rules/overspend'
 import { aboveAverage } from './rules/aboveAverage'
 import { surplusTrend } from './rules/surplusTrend'
 import { goalOffTrack } from './rules/goalOffTrack'
+import { ladderEta } from './rules/ladderEta'
 import type { Insight, InsightInputs, Severity } from './types'
 
 const ORDER: Record<Severity, number> = { alert: 0, watch: 1, win: 2, info: 3 }
@@ -12,6 +13,7 @@ export function runInsights(inputs: InsightInputs): Insight[] {
     ...aboveAverage(inputs),
     ...surplusTrend(inputs),
     ...goalOffTrack(inputs),
+    ...ladderEta(inputs),
   ].sort((a, b) => ORDER[a.severity] - ORDER[b.severity])
 }
 
